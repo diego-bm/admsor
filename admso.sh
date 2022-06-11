@@ -30,8 +30,8 @@ contarArquivos(){
     arquivos=`ls -l $caminho | wc -l`
     ((arquivos=$arquivos-1))
 
-    if (($arquivos > 0)); then
-        if (($arquivos == 1)); then
+    if [ $arquivos -gt 0 ]; then
+        if [ $arquivos -eq 1 ]; then
             echo "Existe $arquivos arquivo no caminho $caminho"
         else
             echo "Existem $arquivos arquivos no caminho $caminho"
@@ -46,19 +46,19 @@ contarArquivos(){
 tornarX(){
     echo "Indique o caminho do script a tornar executável (todos terão permissão para executar):"
     read caminho
-    chmod +x $caminho
-    echo "Permissões alteradas. Cheque:"
-    ls -lap $caminho
-    echo "Sou um programa burro demais para detectar se deu certo. O arquivo ficou executável? (s/n)"
-    read resposta
 
-    case $resposta in 
-        "s") echo "Beleza, obrigado." ;;
-        "S") echo "Beleza, obrigado." ;;
-        "n") echo "Sinto muito. Verifique o caminho e o erro apresentado pelo comando e tente novamente." ;;
-        "N") echo "Sinto muito. Verifique o caminho e o erro apresentado pelo comando e tente novamente." ;;
-        *) echo "Não entendi o que você disse, mas beleza, boto fé." ;;
-    esac
+    if [ -e caminho ]; then
+        chmod +x $caminho
+        if [ -x $caminho ]; then
+            echo "O arquivo teve a permissão concedida com sucesso."
+            ls -lap $caminho
+        else
+            echo "ERRO: o arquivo não teve a permissão concedida."
+            ls -lap $caminho
+        fi
+    else
+        echo "O arquivo ou diretório não existe"
+    fi    
 
     menu
 }
@@ -66,10 +66,21 @@ tornarX(){
 copiarArquivo(){
     echo "Insira o caminho do arquivo a ser copiado:"
     read caminho
-    echo "Agora, insira o caminho para onde a cópia deve ser feita:"
-    read caminhoCopia
-    cp $caminho $caminhoCopia
-    ls -lap $caminhoCopia
+
+    if [ -e $caminho ]; then
+        echo "Agora, insira o diretório para onde a cópia deve ser feita:"
+        read caminhoCopia
+
+        if [ -d $caminhoCopia ]; then
+            cp $caminho $caminhoCopia
+            ls -lap $caminhoCopia
+        else
+            echo "Insira um diretório válido"
+        fi        
+    else
+        echo "O arquivo não existe"
+    fi
+
     menu
 }
 
