@@ -1,6 +1,8 @@
 #!/bin/bash
 
 menu(){
+    clear
+
     echo " ______________________________________________________ "
     echo "|1- Contar arquivos da pasta                           |"
     echo "|2- Tornar arquivo executável                          |"
@@ -30,6 +32,7 @@ contarArquivos(){
     arquivos=`ls -l $caminho | wc -l`
     ((arquivos=$arquivos-1))
     echo "Existe(m) $arquivos arquivo(s) no caminho $caminho"
+    sleep
     menu
 }
 
@@ -49,6 +52,9 @@ tornarX(){
         "N") echo "Sinto muito. Verifique o caminho e o erro apresentado pelo comando e tente novamente." ;;
         *) echo "Não entendi o que você disse, mas beleza, boto fé." ;;
     esac
+
+    sleep 5
+    menu
 }
 
 copiarArquivo(){
@@ -57,6 +63,9 @@ copiarArquivo(){
     echo "Agora, insira o caminho para onde a cópia deve ser feita:"
     read caminhoCopia
     cp $caminho $caminhoCopia
+    ls -lap $caminhoCopia
+    sleep 5
+    menu
 }
 
 tirarPermissoesOutros(){
@@ -65,10 +74,18 @@ tirarPermissoesOutros(){
     chmod o-rwx $caminho
     echo "Veja, a seguir, se deu certo."
     ls -lap $caminho
+    sleep 5
+    menu
 }
 
 darPermissoesRWGrupo(){
-    echo "Hi"
+    echo "O arquivo do qual você inserir o caminho a seguir terá permissões de leitura e escrita pelo grupo:"
+    read caminho
+    chmod g+rw $caminho
+    echo "Veja, a seguir, se deu certo."
+    ls -lap $caminho
+    sleep 5
+    menu
 }
 
 listarArquivos(){
