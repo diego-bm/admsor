@@ -73,7 +73,7 @@ tirarPermissoesOutros(){
     read caminho
     chmod o-rwx $caminho
     echo "Veja, a seguir, se deu certo."
-    ls -lap $caminho
+    listar
     sleep 5
     menu
 }
@@ -83,13 +83,20 @@ darPermissoesRWGrupo(){
     read caminho
     chmod g+rw $caminho
     echo "Veja, a seguir, se deu certo."
-    ls -lap $caminho
+    listar
     sleep 5
     menu
 }
 
+listar(){
+    echo "Listando..."
+    ls -lap $caminho
+}
+
 listarArquivos(){
-    echo "Hi"
+    echo "Insira o caminho a ser listado:"
+    read caminho
+    listar
 }
 
 menu
