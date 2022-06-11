@@ -1,4 +1,5 @@
 #!/bin/bash
+#TODO: FUNCIONALIZAR REPETÊNCIAS
 
 menu(){
     echo " ______________________________________________________ "
@@ -73,12 +74,20 @@ copiarArquivo(){
 
         if [ -d $caminhoCopia ]; then
             cp $caminho $caminhoCopia
-            ls -lap $caminhoCopia
+            if [ -e $caminhoCopia ]; then 
+                echo "Copiado com sucesso!"
+                ls -lap $caminhoCopia
+            else
+                echo "ERRO: o arquivo não foi copiado."
+                copiarArquivo
+            fi
         else
             echo "Insira um diretório válido"
+            copiarArquivo
         fi        
     else
         echo "O arquivo não existe"
+        copiarArquivo
     fi
 
     menu
@@ -87,18 +96,44 @@ copiarArquivo(){
 tirarPermissoesOutros(){
     echo "O arquivo do qual você inserir o caminho a seguir não terá permissão nenhuma dada a outros:"
     read caminho
-    chmod o-rwx $caminho
-    echo "Veja, a seguir, se deu certo."
-    listar
+
+    if [ -e $caminho ]; then
+        chmod o-rwx $caminho
+        permissao=$(stat -c "%A" $caminho)
+        if [[ $permissao == *"---" ]]; then
+            echo "Permissão alterada com sucesso"
+            ls -lap $caminho
+        else
+            echo "ERRO: a permissão não foi alterada."
+            ls -lap $caminho
+            tirarPermissoesOutros
+        fi
+    else
+        echo "O arquivo não existe"
+    fi
+
     menu
 }
 
 darPermissoesRWGrupo(){
     echo "O arquivo do qual você inserir o caminho a seguir terá permissões de leitura e escrita pelo grupo:"
     read caminho
-    chmod g+rw $caminho
-    echo "Veja, a seguir, se deu certo."
-    listar
+    if [ -e $caminho ]; then
+        chmod g+rw $caminho
+        permissao=$(stat -c "%A" $caminho)
+        #TODO: validar corretamente grupos APENAS
+        if [[ $permissao == ????"rw"???? ]]; then
+            echo "Permissão alterada com sucesso"
+            ls -lap $caminho
+        else
+            echo "ERRO: a permissão não foi alterada."
+            ls -lap $caminho
+            darPermissoesRWGrupo
+        fi
+    else
+        echo "O arquivo não existe"
+    fi
+
     menu
 }
 
