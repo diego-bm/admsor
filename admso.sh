@@ -18,7 +18,7 @@ menu(){
         3) copiarArquivo ;;
         4) tirarPermissoesOutros ;;
         5) darPermissoesRWGrupo ;;
-        *) ;;
+        *) echo "Opção inválida." ;;
     esac
 }
 
@@ -32,7 +32,21 @@ contarArquivos(){
     }
 
     tornarX(){
-        echo "Hi"
+        echo "Indique o caminho do script a tornar executável (todos terão permissão para executar):"
+        read caminho
+        chmod +x $caminho
+        echo "Permissões alteradas. Cheque:"
+        ls -lap $caminho
+        echo "Sou um programa burro demais para detectar se deu certo. O arquivo ficou executável? (s/n)"
+        read resposta
+
+        case $resposta in 
+            "s") echo "Beleza, obrigado." ;;
+            "S") echo "Beleza, obrigado." ;;
+            "n") echo "Sinto muito. Verifique o caminho e o erro apresentado pelo comando e tente novamente." ;;
+            "N") echo "Sinto muito. Verifique o caminho e o erro apresentado pelo comando e tente novamente." ;;
+            *) echo "Não entendi o que você disse, mas beleza, boto fé." ;;
+        esac
     }
 
     copiarArquivo(){
