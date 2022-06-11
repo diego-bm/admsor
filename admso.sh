@@ -1,8 +1,6 @@
 #!/bin/bash
 
 menu(){
-    clear
-
     echo " ______________________________________________________ "
     echo "|1- Contar arquivos da pasta                           |"
     echo "|2- Tornar arquivo executável                          |"
@@ -31,8 +29,17 @@ contarArquivos(){
     read caminho
     arquivos=`ls -l $caminho | wc -l`
     ((arquivos=$arquivos-1))
-    echo "Existe(m) $arquivos arquivo(s) no caminho $caminho"
-    sleep
+
+    if (($arquivos > 0)); then
+        if (($arquivos == 1)); then
+            echo "Existe $arquivos arquivo no caminho $caminho"
+        else
+            echo "Existem $arquivos arquivos no caminho $caminho"
+        fi
+    else
+        echo "Não há nenhum arquivo no caminho especificado."
+    fi
+
     menu
 }
 
@@ -53,7 +60,6 @@ tornarX(){
         *) echo "Não entendi o que você disse, mas beleza, boto fé." ;;
     esac
 
-    sleep 5
     menu
 }
 
@@ -64,7 +70,6 @@ copiarArquivo(){
     read caminhoCopia
     cp $caminho $caminhoCopia
     ls -lap $caminhoCopia
-    sleep 5
     menu
 }
 
@@ -74,7 +79,6 @@ tirarPermissoesOutros(){
     chmod o-rwx $caminho
     echo "Veja, a seguir, se deu certo."
     listar
-    sleep 5
     menu
 }
 
@@ -84,7 +88,6 @@ darPermissoesRWGrupo(){
     chmod g+rw $caminho
     echo "Veja, a seguir, se deu certo."
     listar
-    sleep 5
     menu
 }
 
