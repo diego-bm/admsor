@@ -121,8 +121,9 @@ darPermissoesRWGrupo(){
     if [ -e $caminho ]; then
         chmod g+rw $caminho
         permissao=$(stat -c "%A" $caminho)
-        #TODO: validar corretamente grupos APENAS
-        if [[ $permissao == ????"rw"???? ]]; then
+        #Parameter Expansion (Expansão de Parâmetros)
+        permissao=${permissao:4:2}
+        if [[ $permissao == "rw" ]]; then
             echo "Permissão alterada com sucesso"
             ls -lap $caminho
         else
