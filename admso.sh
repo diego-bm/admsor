@@ -68,41 +68,53 @@ tornarX(){
         else
             echo "ERRO: o arquivo não teve a permissão concedida."
             ls -lap $caminho
+            echo "Tente novamente."
+            tornarX
         fi
     else
-        echo "O arquivo ou diretório não existe"
+        echo "O arquivo ou diretório não existe. Tente novamente."
+        tornarX
     fi    
 
     menu
 }
 
 copiarArquivo(){
-    echo "Insira o caminho do arquivo a ser copiado:"
-    read caminho
+    copiarArquivoCheck1         
 
-    if [ -e $caminho ]; then
-        echo "Agora, insira o diretório para onde a cópia deve ser feita:"
-        read caminhoCopia
-
-        if [ -d $caminhoCopia ]; then
-            cp $caminho $caminhoCopia
-            if [ -e $caminhoCopia ]; then 
-                echo "Copiado com sucesso!"
-                ls -lap $caminhoCopia
-            else
-                echo "ERRO: o arquivo não foi copiado."
-                copiarArquivo
-            fi
-        else
-            echo "Insira um diretório válido"
-            copiarArquivo
-        fi        
+    if [ -e $caminhoCopia ]; then 
+        echo "Copiado com sucesso!"
+        ls -lap $caminhoCopia
     else
-        echo "O arquivo não existe"
+        echo "ERRO: o arquivo não foi copiado. Verifique o erro e tente novamente."
         copiarArquivo
     fi
 
     menu
+}
+
+copiarArquivoCheck1(){
+    echo "Insira o caminho do arquivo a ser copiado:"
+    read caminho
+
+    if [ -e $caminho ]; then
+        copiarArquivoCheck2
+    else
+        echo "O arquivo não existe, tente novamente."
+        copiarArquivoCheck1
+    fi
+}
+
+copiarArquivoCheck2(){
+    echo "Agora, insira o diretório para onde a cópia deve ser feita:"
+    read caminhoCopia
+
+    if [ -d $caminhoCopia ]; then
+        cp $caminho $caminhoCopia
+    else
+        echo "Insira um diretório válido"
+        copiarArquivoCheck2
+    fi 
 }
 
 tirarPermissoesOutros(){
@@ -121,7 +133,8 @@ tirarPermissoesOutros(){
             tirarPermissoesOutros
         fi
     else
-        echo "O arquivo não existe"
+        echo "O arquivo não existe. Tente novamente."
+        tirarPermissoesOutros
     fi
 
     menu
@@ -144,7 +157,8 @@ darPermissoesRWGrupo(){
             darPermissoesRWGrupo
         fi
     else
-        echo "O arquivo não existe"
+        echo "O arquivo não existe. Tente novamente."
+        darPermissoesRWGrupo
     fi
 
     menu
@@ -158,7 +172,12 @@ listar(){
 listarArquivos(){
     echo "Insira o caminho a ser listado:"
     read caminho
-    listar
+    if [ -d $caminho ]; then
+        listar
+    else
+        echo "Não é um diretório válido ou existente. Tente novamente."
+        listarArquivos
+    fi
 }
 
 renomear(){
@@ -166,35 +185,52 @@ renomear(){
     read caminho
 
     if [ -d $caminho ]; then
-        echo "Insira o nome do arquivo:"
-        read arquivo
-        arquivosPresentes=$(ls $caminho)
-
-        if [[ arquivosPresentes == *"$arquivo"* ]]; then
-            echo "Insira o novo nome desse arquivo:"
-            read novoNome
-            if [[ arquivosPresentes == *"$novoNome"* ]]; then
-                echo "Você vai substituir um arquivo com o mesmo nome por esse que está renomeando. Deseja continuar? (s/n)"
-                read opcao
-                case $opcao in
-                    "s") 
-                        mv $caminho/$arquivo $caminho/$novoNome ;;
-                    "n") 
-                        echo "Ok, voltando ao menu..." ;
-                        menu ;;
-                    *) 
-                        echo "Opção inválida, voltando ao menu." ;
-                        menu ;;
-                esac
-            else
-                mv $caminho/$arquivo $caminho/$novoNome
-            fi
-        else
-            echo "ERRO: o arquivo especificado não existe nesse diretório."
-        fi
+        renomearCheck1
     else
-        echo "ERRO: o caminho não especifica um diretório."
+        echo "ERRO: o caminho não especifica um diretório. Tente novamente."
+        renomear
     fi
+}
+
+renomearCheck1(){
+    echo "Insira o nome do arquivo:"
+    read arquivo
+    arquivosPresentes=$(ls $caminho)
+
+    if [[ arquivosPresentes == *"$arquivo"* ]]; then
+        renomearCheck2
+    else
+        echo "ERRO: o arquivo especificado não existe nesse diretório."
+    fi
+}
+
+renomearCheck3(){
+    echo "Insira o novo nome desse arquivo:"
+    read novoNome
+    if [[ arquivosPresentes == *"$novoNome"* ]]; then
+        renomearCheck4
+    else
+        mv $caminho/$arquivo $caminho/$novoNome
+    fi
+}
+
+renomearCheck4(){
+    echo "Você vai substituir um arquivo com o mesmo nome por esse que está renomeando. Deseja continuar? (s/n)"
+    renomearCheck5
+}
+
+renomearCheck5(){
+    read opcao
+    case $opcao in
+        "s") 
+            mv $caminho/$arquivo $caminho/$novoNome ;;
+        "n") 
+            echo "Então..."
+            renomearCheck3 ;;
+        *) 
+            echo "Opção inválida. Responda de novo." ;
+            renomearCheck5 ;;
+    esac
 }
 
 criarUsuario(){
@@ -212,20 +248,33 @@ apagarUsuario(){
     listarUsuarios
     echo ""
     echo "Recomendamos apenas deletar usuários que vêm abaixo do nome do seu."
+    echo "Escreva abaixo o nome do usuário a ser deletado:"
     read usuario
+
     sudo userdel $usuario
     listarUsuarios
 }
 
 criarGrupo(){
-    echo "hi"
+    echo "Qual o nome do grupo que quer criar?"
+    read grupo
+    sudo groupadd $grupo
+    listarGrupos
 }
 
 apagarGrupo(){
-    echo "hi"
+    listarGrupos
+
+    echo "Insira o nome do grupo a ser deletado. "
+    echo "Recomendamos apenas deletar grupos que vêm abaixo do nome do seu."
+    read grupo
+    sudo groupdel $grupo
+
+    listarGrupos
 }
 
 mostrarIP(){
+    echo "Trabalhando..."
     ip=`curl ifconfig.me`
     echo "Seu ip é $ip"
 }
@@ -235,7 +284,13 @@ listarUsuarios(){
     echo "____________________________"
     cut -d: -f1 /etc/passwd
     echo "____________________________"
-    echo $usuarios
+}
+
+listarGrupos(){
+    echo "Os grupos dessa maquina são:"
+    echo "____________________________"
+    cat /etc/group | cut -d: -f1
+    echo "____________________________"
 }
 
 menu
