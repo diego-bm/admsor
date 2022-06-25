@@ -9,6 +9,12 @@ menu(){
     echo "|4- Tirar permissão de \"outros\"                        |"
     echo "|5- Dar permissão para \"grupo\" de R.W. (Read e Write)  |"
     echo "|6- Listar arquivos de uma pasta                       |"
+    echo "|7- Trocar o nome de um arquivo                        |"
+    echo "|8- Criar um usuário                                   |"
+    echo "|9- Apagar um usuário                                  |"
+    echo "|10- Criar um grupo                                    |"
+    echo "|11- Apagar um grupo                                   |"
+    echo "|12- Mostrar meu IP                                    |"
     echo "|0- Sair                                               |"
     echo "|______________________________________________________|"
 
@@ -21,6 +27,12 @@ menu(){
         4) tirarPermissoesOutros ;;
         5) darPermissoesRWGrupo ;;
         6) listarArquivos ;;
+        7) renomear ;;
+        8) criarUsuario ;;
+        9) apagarUsuario ;;
+        10) criarGrupo ;;
+        11) apagarGrupo ;;
+        12) mostrarIP;;
         *) echo "Opção inválida." ;;
     esac
 }
@@ -147,6 +159,83 @@ listarArquivos(){
     echo "Insira o caminho a ser listado:"
     read caminho
     listar
+}
+
+renomear(){
+    echo "Insira o caminho do DIRETÓRIO onde está o arquivo:"
+    read caminho
+
+    if [ -d $caminho ]; then
+        echo "Insira o nome do arquivo:"
+        read arquivo
+        arquivosPresentes=$(ls $caminho)
+
+        if [[ arquivosPresentes == *"$arquivo"* ]]; then
+            echo "Insira o novo nome desse arquivo:"
+            read novoNome
+            if [[ arquivosPresentes == *"$novoNome"* ]]; then
+                echo "Você vai substituir um arquivo com o mesmo nome por esse que está renomeando. Deseja continuar? (s/n)"
+                read opcao
+                case $opcao in
+                    "s") 
+                        mv $caminho/$arquivo $caminho/$novoNome ;;
+                    "n") 
+                        echo "Ok, voltando ao menu..." ;
+                        menu ;;
+                    *) 
+                        echo "Opção inválida, voltando ao menu." ;
+                        menu ;;
+                esac
+            else
+                mv $caminho/$arquivo $caminho/$novoNome
+            fi
+        else
+            echo "ERRO: o arquivo especificado não existe nesse diretório."
+        fi
+    else
+        echo "ERRO: o caminho não especifica um diretório."
+    fi
+}
+
+criarUsuario(){
+    echo "Insira o nome do usuário a ser criado, o Linux cuidará do resto para você (em inglês):"
+    read nomeUsuario
+    if [[ nomeUsuario == "" ]]; then
+        echo "ERRO: insira um nome para o usuário."
+        criarUsuario
+    else
+        sudo adduser $nomeUsuario
+    fi
+}
+
+apagarUsuario(){
+    listarUsuarios
+    echo ""
+    echo "Recomendamos apenas deletar usuários que vêm abaixo do nome do seu."
+    read usuario
+    sudo userdel $usuario
+    listarUsuarios
+}
+
+criarGrupo(){
+    echo "hi"
+}
+
+apagarGrupo(){
+    echo "hi"
+}
+
+mostrarIP(){
+    ip=`curl ifconfig.me`
+    echo "Seu ip é $ip"
+}
+
+listarUsuarios(){
+    echo "Os usuários dessa maquina são:"
+    echo "____________________________"
+    cut -d: -f1 /etc/passwd
+    echo "____________________________"
+    echo $usuarios
 }
 
 menu
