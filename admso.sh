@@ -1,5 +1,7 @@
 #!/bin/bash
 #TODO: FUNCIONALIZAR REPETÊNCIAS
+#TODO: USAR /DEV/NULL PARA DEIXAR O PROGRAMA MAIS USER-FRIENDLY
+#TODO: ADICIONAR MAIS VALIDAÇÕES NA FUNÇÃO 13
 
 menu(){
     echo " ______________________________________________________ "
@@ -15,6 +17,7 @@ menu(){
     echo "|10- Criar um grupo                                    |"
     echo "|11- Apagar um grupo                                   |"
     echo "|12- Mostrar meu IP                                    |"
+    echo "|13- Compartilhar uma pasta em rede através do Samba   |"
     echo "|0- Sair                                               |"
     echo "|______________________________________________________|"
 
@@ -32,7 +35,8 @@ menu(){
         9) apagarUsuario ;;
         10) criarGrupo ;;
         11) apagarGrupo ;;
-        12) mostrarIP;;
+        12) mostrarIP ;;
+        13) compartilharSamba ;;
         *) echo "Opção inválida." ;;
     esac
 }
@@ -204,32 +208,32 @@ renomearCheck1(){
     fi
 }
 
-renomearCheck3(){
+renomearCheck2(){
     echo "Insira o novo nome desse arquivo:"
     read novoNome
     if [[ arquivosPresentes == *"$novoNome"* ]]; then
-        renomearCheck4
+        renomearCheck3
     else
         mv $caminho/$arquivo $caminho/$novoNome
     fi
 }
 
-renomearCheck4(){
+renomearCheck3(){
     echo "Você vai substituir um arquivo com o mesmo nome por esse que está renomeando. Deseja continuar? (s/n)"
-    renomearCheck5
+    renomearCheck4
 }
 
-renomearCheck5(){
+renomearCheck4(){
     read opcao
     case $opcao in
         "s") 
             mv $caminho/$arquivo $caminho/$novoNome ;;
         "n") 
             echo "Então..."
-            renomearCheck3 ;;
+            renomearCheck2 ;;
         *) 
             echo "Opção inválida. Responda de novo." ;
-            renomearCheck5 ;;
+            renomearCheck4 ;;
     esac
 }
 
@@ -291,6 +295,67 @@ listarGrupos(){
     echo "____________________________"
     cat /etc/group | cut -d: -f1
     echo "____________________________"
+}
+
+compartilharSamba(){
+    echo "Qual o nome do compartilhamento?"
+    read compartilhamento
+
+    echo "E do usuário?"
+    read usuarioCompartilhamento
+
+    sudo cut -d: -f1 /etc/passwd | grep "$usuarioCompartilhamento" &> /dev/null
+
+    if [ ! $? -eq 0 ]; then
+        clear
+        echo "Usuário não existe. Criando..."
+        sudo adduser $usuarioCompartilhamento
+    fi
+
+    echo "Insira a senha do Samba."
+    sudo smbpasswd -a $usuarioCompartilhamento
+
+    if [ -d /home/$usuarioCompartilhamento/$compartilhamento ]; then
+        echo "Diretório já preparado!"
+    else
+        echo "Diretório não existe. Criando..."
+        sudo mkdir /home/$usuarioCompartilhamento/$compartilhamento
+        if [ -d /home/$usuarioCompartilhamento/$compartilhamento ]; then
+            echo "Diretório criado!"
+        else
+            echo "ERRO AO CRIAR O DIRETÓRIO!"
+        fi
+        
+        echo "Aplicando permissões ao usuário..."
+        sudo chmod 777 /home/$usuarioCompartilhamento/$compartilhamento
+    fi
+
+    echo "Gerando arquivo de configurações globais..."
+    echo "[global]" > smb.temp
+	echo "workgroup = admsor" >> smb.temp
+	echo "netbios name = pcdiego" >> smb.temp
+   	echo "security = user" >> smb.temp
+
+    echo "Gerando arquivo de compartilhamento do usuário..."
+    echo "[$compartilhamento]" > $compartilhamento.comp
+    echo "comment = arquivos do(a) $usuarioCompartilhamento" >> $compartilhamento.comp
+    echo "path = /home/$usuarioCompartilhamento/$compartilhamento" >> $compartilhamento.comp 
+    echo "browseable = yes" >> $compartilhamento.comp
+    echo "read only = no" >> $compartilhamento.comp
+    echo "guest ok = yes" >> $compartilhamento.comp
+    echo "valid users = $usuarioCompartilhamento" >> $compartilhamento.comp
+
+    echo "Concatenando..."
+    cat smb.temp > smb.conf
+	cat *.comp >> smb.conf
+	sudo cp smb.conf /etc/samba/smb.conf
+    sudo chown root.root /etc/samba/smb.conf
+
+    echo "Reiniciando o serviço do Samba..."
+    systemctl restart smbd
+
+    echo "Terminado!"
+    menu
 }
 
 menu
