@@ -7,23 +7,27 @@
 Menu(){
     clear
 
-    echo " ______________________________________________________ "
-    echo "|1- Contar arquivos da pasta                           |"
-    echo "|2- Tornar arquivo executável                          |"
-    echo "|3- Copiar arquivo                                     |"
-    echo "|4- Tirar permissão de \"outros\"                        |"
-    echo "|5- Dar permissão para \"grupo\" de R.W. (Read e Write)  |"
-    echo "|6- Listar arquivos de uma pasta                       |"
-    echo "|7- Trocar o nome de um arquivo                        |"
-    echo "|8- Criar um usuário                                   |"
-    echo "|9- Apagar um usuário                                  |"
-    echo "|10- Criar um grupo                                    |"
-    echo "|11- Apagar um grupo                                   |"
-    echo "|12- Mostrar meu IP                                    |"
-    echo "|13- [SAMBA] Compartilhar uma pasta em rede            |"
-    echo "|14- [SAMBA] Mostrar compartilhamentos ativos          |"
-    echo "|0- Sair                                               |"
-    echo "|______________________________________________________|"
+    echo " _______________________________________________________________ "
+    echo "|1- Contar arquivos da pasta                                    |"
+    echo "|2- Tornar arquivo executável                                   |"
+    echo "|3- Copiar arquivo                                              |"
+    echo "|4- Tirar permissão de \"outros\"                                 |"
+    echo "|5- Dar permissão para \"grupo\" de R.W. (Read e Write)           |"
+    echo "|6- Listar arquivos de uma pasta                                |"
+    echo "|7- Trocar o nome de um arquivo                                 |"
+    echo "|8- Criar um usuário                                            |"
+    echo "|9- Apagar um usuário                                           |"
+    echo "|10- Criar um grupo                                             |"
+    echo "|11- Apagar um grupo                                            |"
+    echo "|12- Mostrar meu IP                                             |"
+    echo "|13- [SAMBA] Compartilhar uma pasta em rede                     |"
+    echo "|14- [SAMBA] Mostrar compartilhamentos ativos                   |"
+    echo "|15- [SAMBA] Testar parâmetros de configuração                  |"
+    echo "|16- [SAMBA] Verificar instalação                               |"
+    echo "|17- [SAMBA] Mostrar compartilhamentos ativos em um host remoto |"
+    echo "|18- [SAMBA] Deletar compartilhamento                           |"
+    echo "|0- Sair                                                        |"
+    echo "|_______________________________________________________________|"
 
     read opcao
     case $opcao in
@@ -42,6 +46,10 @@ Menu(){
         12) MostrarIP ;;
         13) CompartilharSamba ;;
         14) ListarCompartilhamentosSamba ;;
+        15) TestarConfigSamba ;;
+        16) VerificarSambaInstalado ;;
+        17) ListarCompartilhamentosSambaRemoto ;;
+        18) RemoverCompartilhamentoSamba ;;
         *) echo "Opção inválida." ;;
     esac
 }
@@ -312,8 +320,11 @@ ApagarGrupo(){
 
 MostrarIP(){
     echo "Trabalhando..."
-    ip=`curl ifconfig.me`
-    echo "Seu ip é $ip"
+    ipInterno=`hostname -I`
+    echo "Seu ip externo é: `curl -s ifconfig.me`"
+    echo "Enquanto o seu IP interno e endereço MAC é, respectivamente: $ipInterno"
+
+    AperteEnter
 }
 
 ListarUsuarios(){
@@ -331,8 +342,14 @@ ListarGrupos(){
 }
 
 CompartilharSamba(){
+    InstalarSamba
     echo "Qual o nome do compartilhamento?"
     read compartilhamento
+
+    if grep -q $compartilhamento "/etc/samba/smb.conf"; then
+        echo "Esse compartilhamento já existe! Não é possivel criá-lo."
+        AperteEnter
+    fi
 
     echo "E do usuário?"
     read usuarioCompartilhamento
@@ -392,11 +409,13 @@ CompartilharSamba(){
 }
 
 CriarUsuarioSamba(){
+    InstalarSamba
     sudo smbpasswd -a $nomeUsuario
     AperteEnter
 }
 
 ListarCompartilhamentosSamba(){
+    InstalarSamba
     echo "Você precisa logar com um usuário do Samba para conseguir ver as conexões ativas."
     read -p "Digite o usuário: " usuario
 
@@ -421,6 +440,148 @@ ListarCompartilhamentosSamba(){
                 echo "Opção inválida. Responda de novo." ;
                 ListarCompartilhamentosSamba ;;
         esac
+    fi
+}
+
+ListarCompartilhamentosSambaRemoto(){
+    InstalarSamba
+    echo "Digite o IP da conexão remota."
+    read ip
+    echo "Você precisa logar com um usuário do Samba da conexão inserida para conseguir ver as conexões ativas."
+    read -p "Digite o usuário: " usuario
+
+    smbclient -L $ip -U $usuario
+
+    AperteEnter
+}
+
+InstalarSamba(){
+    caminhoSamba=`whereis samba`
+    caminhoSmbclient=`whereis smbclient`
+
+    if [[ ! $caminhoSamba == *"/usr/sbin/samba"* ]]; then
+        echo "ERRO: Samba não instalado. Instalando..."
+        sudo apt-get install samba
+        clear
+    fi
+
+    if [[ ! $caminhoSmbclient == *"/usr/bin/smbclient"* ]]; then
+        echo "ERRO: SmbClient não instalado. Instalando..."
+        sudo apt-get install smbclient
+        clear
+    fi
+}
+
+VerificarSambaInstalado(){
+    caminhoSamba=`whereis samba`
+    caminhoSmbclient=`whereis smbclient`
+
+    if [[ ! $caminhoSamba == *"/usr/sbin/samba"* ]]; then
+        read -p "Samba não instalado. Deseja instalá-lo? (S/n) " opcao
+        case $opcao in
+            "s") 
+                echo "Instalando Samba..." ;
+                sudo apt-get install samba ;
+                clear ;
+                VerificarSambaInstalado ;;
+            "S") 
+                echo "Instalando Samba..." ;
+                sudo apt-get install samba ;
+                clear ;
+                VerificarSambaInstalado ;;
+            "n") 
+                echo "Ok, retornando ao menu..." ;
+                AperteEnter ;;
+            "N") 
+                echo "Ok, retornando ao menu..." ;
+                AperteEnter ;;
+            *) 
+                echo "Opção inválida. Responda de novo." ;
+                VerificarSambaInstalado ;;
+        esac
+    else
+        echo "Samba instalado!"
+    fi
+
+    if [[ ! $caminhoSmbclient == *"/usr/bin/smbclient"* ]]; then
+        read -p "SmbClient não instalado. Deseja instalá-lo? (S/n) " opcao
+        case $opcao in
+            "s") 
+                echo "Instalando SmbClient..." ;
+                sudo apt-get install smbclient ;
+                clear ;
+                VerificarSambaInstalado ;;
+            "S") 
+                echo "Instalando SmbClient..." ;
+                sudo apt-get install smbclient ;
+                clear ;
+                VerificarSambaInstalado ;;
+            "n") 
+                echo "Ok, retornando ao menu..." ;
+                AperteEnter ;;
+            "N") 
+                echo "Ok, retornando ao menu..." ;
+                AperteEnter ;;
+            *) 
+                echo "Opção inválida. Responda de novo." ;
+                VerificarSambaInstalado ;;
+        esac
+    else
+        echo "SmbClient instalado!"
+    fi
+
+    AperteEnter
+}
+
+TestarConfigSamba(){
+    resultado=`tesparm`
+
+    if [[ $resultado == *"Loaded services file OK."* ]]; then 
+        echo "Configuração do Samba OK."
+        echo "Tenha em mente que isso NÃO garante que a conexão funcionará."
+    fi
+
+    AperteEnter
+}
+
+RemoverCompartilhamentoSamba(){
+    InstalarSamba
+    echo "Você precisa logar com um usuário do Samba para conseguir ver as conexões ativas."
+    read -p "Digite o usuário: " usuario
+
+    usuarios=`cut -d: -f1 /etc/passwd`
+
+    if [[ "$usuarios" == *"$usuario"* ]]; then
+        smbclient -L 127.0.1.1 -U $usuario
+    else
+        echo "O usuário \"$usuario\" não existe."
+        RemoverCompartilhamentoSamba
+    fi
+
+    echo "Qual dos compartilhamentos mostrados acima deseja deletar?"
+    read compartilhamento
+
+    contador=0
+
+    if grep -q $compartilhamento "/etc/samba/smb.conf"; then
+        while read p; do
+            if [[ $p == "[$compartilhamento]" ]]; then
+                ((contador=$contador+1))
+                rangeDeletarLinhaComeco=$contador
+
+                echo "$contador) $p"
+            else
+                ((contador=$contador+1))
+                echo "$contador) $p"
+            fi
+        done </home/diego/Área\ de\ trabalho/linha.txt
+
+        #Fazer o método de rodar as linhas, dessa vez tentando pegar só o pedaço do compartilhamento a ser removido
+        #Tentar fazer ele pegar da linha de inicio do range até o fim apenas, por exemplo
+        echo "Deletar da linha $rangeDeletarLinhaComeco a linha $rangeDeletarLinhaFim"
+
+
+        AperteEnter
     fi
 }
 
