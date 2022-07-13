@@ -3,6 +3,7 @@
 #TODO: USAR /DEV/NULL PARA DEIXAR O PROGRAMA MAIS USER-FRIENDLY
 #TODO: ADICIONAR MAIS VALIDAÇÕES NA FUNÇÃO 13
 #TODO: SEPARAR PROGRAMA EM PROGRAMAS MENORES (SUB-PROGRAMAS)
+#DESISTIDO: DELETAR COMPARTILHAMENTO SAMBA
 
 Menu(){
     clear
@@ -25,7 +26,7 @@ Menu(){
     echo "|15- [SAMBA] Testar parâmetros de configuração                  |"
     echo "|16- [SAMBA] Verificar instalação                               |"
     echo "|17- [SAMBA] Mostrar compartilhamentos ativos em um host remoto |"
-    echo "|18- [SAMBA] Deletar compartilhamento                           |"
+    # echo "|18- [SAMBA] Deletar compartilhamento                           |"
     echo "|0- Sair                                                        |"
     echo "|_______________________________________________________________|"
 
@@ -49,7 +50,7 @@ Menu(){
         15) TestarConfigSamba ;;
         16) VerificarSambaInstalado ;;
         17) ListarCompartilhamentosSambaRemoto ;;
-        18) RemoverCompartilhamentoSamba ;;
+        # 18) RemoverCompartilhamentoSamba ;;
         *) echo "Opção inválida." ;;
     esac
 }
@@ -544,45 +545,68 @@ TestarConfigSamba(){
     AperteEnter
 }
 
-RemoverCompartilhamentoSamba(){
-    InstalarSamba
-    echo "Você precisa logar com um usuário do Samba para conseguir ver as conexões ativas."
-    read -p "Digite o usuário: " usuario
+# RemoverCompartilhamentoSamba(){
+#     InstalarSamba
 
-    usuarios=`cut -d: -f1 /etc/passwd`
+#     if [ -e "./smb.conf" ]; then
+#         sudo mv ./smb.conf /dev/null
+#     fi
 
-    if [[ "$usuarios" == *"$usuario"* ]]; then
-        smbclient -L 127.0.1.1 -U $usuario
-    else
-        echo "O usuário \"$usuario\" não existe."
-        RemoverCompartilhamentoSamba
-    fi
-
-    echo "Qual dos compartilhamentos mostrados acima deseja deletar?"
-    read compartilhamento
-
-    contador=0
-
-    if grep -q $compartilhamento "/etc/samba/smb.conf"; then
-        while read p; do
-            if [[ $p == "[$compartilhamento]" ]]; then
-                ((contador=$contador+1))
-                rangeDeletarLinhaComeco=$contador
-
-                echo "$contador) $p"
-            else
-                ((contador=$contador+1))
-                echo "$contador) $p"
-            fi
-        done </home/diego/Área\ de\ trabalho/linha.txt
-
-        #Fazer o método de rodar as linhas, dessa vez tentando pegar só o pedaço do compartilhamento a ser removido
-        #Tentar fazer ele pegar da linha de inicio do range até o fim apenas, por exemplo
-        echo "Deletar da linha $rangeDeletarLinhaComeco a linha $rangeDeletarLinhaFim"
+#     if [ -e "./smb.temp" ]; then
+#         sudo mv ./smb.temp /dev/null
+#     fi
 
 
-        AperteEnter
-    fi
-}
+#     echo "Você precisa logar com um usuário do Samba para conseguir ver as conexões ativas."
+#     read -p "Digite o usuário: " usuario
+
+#     usuarios=`cut -d: -f1 /etc/passwd`
+
+#     if [[ "$usuarios" == *"$usuario"* ]]; then
+#         smbclient -L 127.0.1.1 -U $usuario
+#     else
+#         echo "O usuário \"$usuario\" não existe."
+#         RemoverCompartilhamentoSamba
+#     fi
+
+#     echo "Qual dos compartilhamentos mostrados acima deseja deletar?"
+#     read compartilhamento
+
+#     contador=0
+
+#     if grep -q $compartilhamento "/etc/samba/smb.conf"; then
+#         while read p; do
+#             if [[ $p == "[$compartilhamento]" ]]; then
+#                 ((contador=$contador+1))
+#                 rangeDeletarLinhaComeco=$contador
+
+#                 while 
+#                 [[ $p == *"["* ]] &&
+#                 [[ ! $p == "[$compartilhamento]" ]]; do
+#                     echo $p >> smb.temp
+#                 done
+
+#                 echo "$contador) $p"
+#             # elif [ $contador = 1 ]; then
+#             #     echo $p > smb.temp
+
+#             #     ((contador=$contador+1))
+#             #     echo "$contador) $p"
+#             else
+#                 echo $p >> smb.temp
+
+#                 ((contador=$contador+1))
+#                 echo "$contador) $p"
+#             fi
+#         done </home/diego/Área\ de\ trabalho/linha.txt
+
+#         #Fazer o método de rodar as linhas, dessa vez tentando pegar só o pedaço do compartilhamento a ser removido
+#         #Tentar fazer ele pegar da linha de inicio do range até o fim apenas, por exemplo
+#         echo "Deletar da linha $rangeDeletarLinhaComeco a linha $rangeDeletarLinhaFim"
+
+
+#         AperteEnter
+#     fi
+# }
 
 Menu
